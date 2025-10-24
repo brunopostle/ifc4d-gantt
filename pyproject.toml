@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ifc4d-gantt"
+version = "0.1.0"
+description = "Extract scheduling data from IFC files and generate interactive Gantt charts"
+readme = "README.md"
+license = "LGPL-3.0-or-later"
+authors = [
+    {name = "Bruno Postle", email = "bruno@postle.net"}
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "ifcopenshell>=0.8.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "build>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/brunopostle/ifc4d-gantt"
+Repository = "https://github.com/brunopostle/ifc4d-gantt"
+Issues = "https://github.com/brunopostle/ifc4d-gantt/issues"
+
+[project.scripts]
+ifc4d-gantt = "ifc4d_gantt:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ifc4d_gantt = ["*.py"]

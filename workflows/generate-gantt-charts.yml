@@ -1,0 +1,236 @@
+name: Generate IFC Gantt Charts
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '**.ifc'
+  release:
+    types: [created, published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all tags
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install ifc4d-gantt
+        run: |
+          pip install --no-deps https://github.com/brunopostle/ifc4d-gantt/releases/download/v0.1.0/ifc4d_gantt-0.1.0-py3-none-any.whl
+
+      - name: Find IFC files and generate Gantt charts
+        run: |
+          mkdir -p _site
+
+          # Get commit SHA (short form)
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+
+          # Get tag if this is a tagged commit
+          TAG_NAME=$(git describe --exact-match --tags 2>/dev/null || echo "")
+
+          # Create output directory structure
+          if [ -n "$TAG_NAME" ]; then
+            OUTPUT_DIR="_site/tags/$TAG_NAME"
+            LABEL="tag $TAG_NAME"
+          else
+            OUTPUT_DIR="_site/commits/$COMMIT_SHA"
+            LABEL="commit $COMMIT_SHA"
+          fi
+
+          mkdir -p "$OUTPUT_DIR"
+
+          # Find all IFC files and generate charts
+          echo "Generating Gantt charts for $LABEL..."
+          IFC_COUNT=0
+
+          find . -name "*.ifc" -type f | while read -r ifc_file; do
+            # Get relative path and create a safe filename
+            rel_path="${ifc_file#./}"
+            safe_name=$(echo "$rel_path" | sed 's/[^a-zA-Z0-9._-]/_/g')
+            output_file="$OUTPUT_DIR/${safe_name%.ifc}.html"
+
+            echo "Processing: $ifc_file -> $output_file"
+            ifc4d-gantt "$ifc_file" "$output_file"
+
+            IFC_COUNT=$((IFC_COUNT + 1))
+          done
+
+          # Generate index.html for this version
+          cat > "$OUTPUT_DIR/index.html" <<EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8"/>
+            <title>IFC Gantt Charts - $LABEL</title>
+            <style>
+              body { font-family: sans-serif; margin: 40px; }
+              h1 { color: #333; }
+              ul { list-style-type: none; padding: 0; }
+              li { margin: 10px 0; }
+              a { color: #0366d6; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              .info { color: #666; font-size: 0.9em; }
+            </style>
+          </head>
+          <body>
+            <h1>IFC Gantt Charts</h1>
+            <p class="info">Generated from $LABEL</p>
+            <h2>Available Charts:</h2>
+            <ul>
+          EOF
+
+          # Add links to each generated chart
+          find "$OUTPUT_DIR" -name "*.html" ! -name "index.html" | sort | while read -r html_file; do
+            filename=$(basename "$html_file")
+            echo "      <li><a href=\"$filename\">$filename</a></li>" >> "$OUTPUT_DIR/index.html"
+          done
+
+          cat >> "$OUTPUT_DIR/index.html" <<EOF
+            </ul>
+          </body>
+          </html>
+          EOF
+
+          # Generate root index.html
+          cat > "_site/index.html" <<EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8"/>
+            <title>IFC Gantt Charts - All Versions</title>
+            <style>
+              body { font-family: sans-serif; margin: 40px; }
+              h1 { color: #333; }
+              ul { list-style-type: none; padding: 0; }
+              li { margin: 10px 0; }
+              a { color: #0366d6; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              .section { margin-top: 30px; }
+            </style>
+          </head>
+          <body>
+            <h1>IFC Gantt Charts - All Versions</h1>
+
+            <div class="section">
+              <h2>Latest Version</h2>
+              <ul>
+          EOF
+
+          if [ -n "$TAG_NAME" ]; then
+            echo "        <li><a href=\"tags/$TAG_NAME/\">Tag: $TAG_NAME</a></li>" >> "_site/index.html"
+          else
+            echo "        <li><a href=\"commits/$COMMIT_SHA/\">Commit: $COMMIT_SHA</a></li>" >> "_site/index.html"
+          fi
+
+          cat >> "_site/index.html" <<EOF
+              </ul>
+            </div>
+
+            <div class="section">
+              <h2>All Tags</h2>
+              <ul id="tags"></ul>
+            </div>
+
+            <div class="section">
+              <h2>Recent Commits</h2>
+              <ul id="commits"></ul>
+            </div>
+
+            <script>
+              // Dynamically populate tags and commits if directories exist
+              fetch('tags/')
+                .then(r => r.text())
+                .then(html => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+                  const links = Array.from(doc.querySelectorAll('a'))
+                    .filter(a => a.href.endsWith('/'))
+                    .filter(a => !a.href.includes('?') && !a.href.includes('..'));
+
+                  const tagsList = document.getElementById('tags');
+                  if (links.length > 0) {
+                    links.forEach(link => {
+                      const li = document.createElement('li');
+                      const a = document.createElement('a');
+                      a.href = 'tags/' + link.textContent;
+                      a.textContent = link.textContent.replace('/', '');
+                      li.appendChild(a);
+                      tagsList.appendChild(li);
+                    });
+                  } else {
+                    tagsList.innerHTML = '<li>No tags yet</li>';
+                  }
+                })
+                .catch(() => {
+                  document.getElementById('tags').innerHTML = '<li>No tags yet</li>';
+                });
+
+              fetch('commits/')
+                .then(r => r.text())
+                .then(html => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, 'text/html');
+                  const links = Array.from(doc.querySelectorAll('a'))
+                    .filter(a => a.href.endsWith('/'))
+                    .filter(a => !a.href.includes('?') && !a.href.includes('..'));
+
+                  const commitsList = document.getElementById('commits');
+                  if (links.length > 0) {
+                    links.forEach(link => {
+                      const li = document.createElement('li');
+                      const a = document.createElement('a');
+                      a.href = 'commits/' + link.textContent;
+                      a.textContent = link.textContent.replace('/', '');
+                      li.appendChild(a);
+                      commitsList.appendChild(li);
+                    });
+                  } else {
+                    commitsList.innerHTML = '<li>No commits yet</li>';
+                  }
+                })
+                .catch(() => {
+                  document.getElementById('commits').innerHTML = '<li>No commits yet</li>';
+                });
+            </script>
+          </body>
+          </html>
+          EOF
+
+          echo "Generated Gantt charts in $OUTPUT_DIR"
+          ls -la "$OUTPUT_DIR"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
