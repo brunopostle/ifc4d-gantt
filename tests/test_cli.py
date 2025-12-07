@@ -30,7 +30,7 @@ class TestCLI:
         # Mock file
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with patch("sys.argv", ["ifc4d_gantt", "test.ifc"]):
             with patch("ifc4d_gantt.ifcopenshell.open", return_value=mock_file):
@@ -58,7 +58,7 @@ class TestCLI:
         # Mock file
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with patch("sys.argv", ["ifc4d_gantt", "test.ifc", "custom.html"]):
             with patch("ifc4d_gantt.ifcopenshell.open", return_value=mock_file):
@@ -78,7 +78,7 @@ class TestCLI:
         # Mock file with no schedules
         mock_file = Mock()
         mock_file.by_type.return_value = []
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with patch("sys.argv", ["ifc4d_gantt", "test.ifc"]):
             with patch("ifc4d_gantt.ifcopenshell.open", return_value=mock_file):
@@ -122,7 +122,7 @@ class TestCLI:
         # Mock file
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         written_content = []
 
@@ -174,7 +174,7 @@ class TestCLI:
         # Mock file
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule_1, mock_schedule_2]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with patch("sys.argv", ["ifc4d_gantt", "test.ifc"]):
             with patch("ifc4d_gantt.ifcopenshell.open", return_value=mock_file):

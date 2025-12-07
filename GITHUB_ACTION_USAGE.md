@@ -33,7 +33,7 @@ Or manually copy `workflows/generate-gantt-charts.yml` from the ifc4d-gantt repo
 ### 3. Commit and Push
 
 ```bash
-git add .github/workflows/ifc4d-gantt-charts.yml
+git add .github/workflows/generate-gantt-charts.yml
 git commit -m "Add IFC Gantt chart generation workflow"
 git push
 ```
@@ -55,31 +55,34 @@ The generated GitHub Pages site has this structure:
 
 ```
 https://username.github.io/repo-name/
-├── index.html                          # Root index with links to all versions
-├── commits/
-│   ├── abc1234/
-│   │   ├── index.html                 # List of charts for this commit
-│   │   ├── model1.html                # Generated Gantt chart
-│   │   └── subfolder_model2.html      # Generated Gantt chart
-│   └── def5678/
-│       └── ...
-└── tags/
-    ├── v1.0.0/
-    │   ├── index.html                 # List of charts for this tag
-    │   └── *.html                     # Generated Gantt charts
-    └── v2.0.0/
-        └── ...
+└── ifc4d/                              # All charts in ifc4d subfolder
+    ├── index.html                      # Root index with links to all versions
+    ├── commits/
+    │   ├── abc1234/
+    │   │   ├── index.html             # List of charts for this commit
+    │   │   ├── model1.html            # Generated Gantt chart
+    │   │   └── subfolder_model2.html  # Generated Gantt chart
+    │   └── def5678/
+    │       └── ...
+    └── tags/
+        ├── v1.0.0/
+        │   ├── index.html             # List of charts for this tag
+        │   └── *.html                 # Generated Gantt charts
+        └── v2.0.0/
+            └── ...
 ```
+
+**Note**: All charts are placed in an `ifc4d/` subfolder to avoid conflicts with other GitHub Pages content you may have.
 
 ### Viewing Charts
 
-1. **Root Index**: `https://username.github.io/repo-name/`
+1. **Root Index**: `https://username.github.io/repo-name/ifc4d/`
    - Shows links to the latest version and all historical versions
 
-2. **Latest Commit**: `https://username.github.io/repo-name/commits/abc1234/`
+2. **Latest Commit**: `https://username.github.io/repo-name/ifc4d/commits/abc1234/`
    - View charts from a specific commit
 
-3. **Tagged Release**: `https://username.github.io/repo-name/tags/v1.0.0/`
+3. **Tagged Release**: `https://username.github.io/repo-name/ifc4d/tags/v1.0.0/`
    - View charts from a specific release version
 
 ## Customization

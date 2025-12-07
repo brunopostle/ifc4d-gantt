@@ -13,7 +13,7 @@ class TestIfc2Gantt:
         """Test that converter generates message when no work schedules exist"""
         mock_file = Mock()
         mock_file.by_type.return_value = []
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             output_path = f.name
@@ -45,7 +45,7 @@ class TestIfc2Gantt:
         # Mock file
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             output_path = f.name
@@ -94,7 +94,7 @@ class TestIfc2Gantt:
         # Mock file
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             output_path = f.name
@@ -171,7 +171,7 @@ class TestIfc2Gantt:
         # Mock file
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             output_path = f.name
@@ -207,7 +207,7 @@ class TestIfc2Gantt:
 
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             output_path = f.name
@@ -244,7 +244,7 @@ class TestIfc2Gantt:
 
         mock_file = Mock()
         mock_file.by_type.return_value = [mock_schedule_1, mock_schedule_2]
-        mock_file.wrapped_data.header.file_name.name = "test.ifc"
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             output_path = f.name

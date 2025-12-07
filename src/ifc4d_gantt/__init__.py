@@ -58,7 +58,8 @@ class Ifc2Gantt:
     def _get_ifc_filename(self):
         """Extract IFC filename from file object"""
         try:
-            return Path(self.file.wrapped_data.header.file_name.name).name
+            filename = self.file.wrapped_data.header().file_name_py().get_argument(0)
+            return Path(filename).name
         except:
             return "model.ifc"
 
