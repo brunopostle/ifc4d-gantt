@@ -145,6 +145,18 @@ class Ifc2Gantt:
                 if rel.RelatingObject.is_a("IfcTask"):
                     task_data["pParent"] = rel.RelatingObject.id()
 
+            # Get predecessors (IfcRelSequence relationships where this task is the successor)
+            depend_suffixes = {
+                "START_START": "SS",
+                "FINISH_FINISH": "FF",
+                "START_FINISH": "SF",
+            }
+            predecessors = []
+            for rel in element.IsSuccessorFrom or []:
+                suffix = depend_suffixes.get(rel.SequenceType, "")
+                predecessors.append(f"{rel.RelatingProcess.id()}{suffix}")
+            task_data["pDepend"] = ",".join(predecessors)
+
             tasks_list.append(task_data)
 
             # Process children
@@ -177,6 +189,17 @@ class Ifc2Gantt:
             var tasks{idx} = {json.dumps(schedule_data['tasks'], indent=2)};
             JSGantt.addJSONTask(g{idx}, tasks{idx});
             g{idx}.Draw();
+        </script>
+        <script>
+            // jsgantt-improved computes dependency arrow coordinates from bar
+            // element layout during Draw(), before the browser has laid out
+            // those bars, so arrows silently fail to render unless dependency
+            // drawing is re-triggered from a separate script tag afterwards.
+            // Known limitation: switching the Hour/Day/Week/Month/Quarter
+            // format redraws the chart in place via another Draw() call,
+            // which hits this same jsgantt-improved timing bug -- arrows
+            // disappear again until the page is reloaded.
+            g{idx}.DrawDependencies();
         </script>
     </div>"""
             schedules_html_parts.append(section_html)

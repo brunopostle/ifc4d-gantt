@@ -106,6 +106,7 @@ class TestCLI:
         mock_task.TaskTime = None
         mock_task.IsNestedBy = []
         mock_task.Nests = []
+        mock_task.IsSuccessorFrom = []
 
         # Mock relationship
         mock_rel = Mock()

@@ -78,6 +78,7 @@ class TestIfc2Gantt:
         mock_task.TaskTime = None
         mock_task.IsNestedBy = []
         mock_task.Nests = []
+        mock_task.IsSuccessorFrom = []
 
         # Mock relationship
         mock_rel = Mock()
@@ -135,6 +136,7 @@ class TestIfc2Gantt:
         mock_child.id.return_value = 789
         mock_child.TaskTime = None
         mock_child.IsNestedBy = []
+        mock_child.IsSuccessorFrom = []
 
         mock_child_nests = Mock()
         mock_child_nests.RelatingObject = Mock()
@@ -155,6 +157,7 @@ class TestIfc2Gantt:
         mock_parent.TaskTime = None
         mock_parent.IsNestedBy = [mock_nested_rel]
         mock_parent.Nests = []
+        mock_parent.IsSuccessorFrom = []
 
         # Mock relationship
         mock_rel = Mock()
@@ -193,6 +196,64 @@ class TestIfc2Gantt:
                 assert "Child Task" in html
                 # Verify pGroup is 1 for parent (has children)
                 assert '"pGroup": 1' in html
+        finally:
+            Path(output_path).unlink()
+
+    def test_task_dependencies_extraction(self):
+        """Test that predecessor relationships are extracted into pDepend"""
+        # Mock predecessor task
+        mock_predecessor = Mock()
+        mock_predecessor.id.return_value = 111
+
+        # Mock successor task
+        mock_successor = Mock()
+        mock_successor.is_a.side_effect = lambda x: x == "IfcTask"
+        mock_successor.Name = "Successor Task"
+        mock_successor.Description = ""
+        mock_successor.id.return_value = 222
+        mock_successor.TaskTime = None
+        mock_successor.IsNestedBy = []
+        mock_successor.Nests = []
+
+        mock_sequence_rel = Mock()
+        mock_sequence_rel.RelatingProcess = mock_predecessor
+        mock_sequence_rel.SequenceType = "FINISH_START"
+        mock_successor.IsSuccessorFrom = [mock_sequence_rel]
+
+        # Mock relationship
+        mock_rel = Mock()
+        mock_rel.RelatedObjects = [mock_successor]
+
+        # Mock work schedule
+        mock_schedule = Mock()
+        mock_schedule.Name = "Test Schedule"
+        mock_schedule.id.return_value = 123
+        mock_schedule.CreationDate = "2025-01-01"
+        mock_schedule.Controls = [mock_rel]
+        mock_schedule.is_a.side_effect = lambda x: x == "IfcWorkSchedule"
+
+        # Mock file
+        mock_file = Mock()
+        mock_file.by_type.return_value = [mock_schedule]
+        mock_file.wrapped_data.header.return_value.file_name_py.return_value.get_argument.return_value = "test.ifc"
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
+            output_path = f.name
+
+        try:
+            with patch(
+                "ifc4d_gantt.ifcopenshell.util.sequence.derive_date", return_value=None
+            ):
+                converter = Ifc2Gantt()
+                converter.file = mock_file
+                converter.html = output_path
+                converter.execute()
+
+                # Read generated HTML
+                with open(output_path, "r") as f:
+                    html = f.read()
+
+                assert '"pDepend": "111"' in html
         finally:
             Path(output_path).unlink()
 
